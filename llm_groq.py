@@ -1,7 +1,7 @@
 # [LLM](https://llm.datasette.io/) plugin providing access to [Groqcloud](http://console.groq.com) models.
 # Base off of llm-mistral (https://github.com/simonw/llm-mistral)
 import llm
-from groq import Groq
+from groq import Groq, DefaultHttpxClient
 from pydantic import Field
 from typing import Optional, List, Union
 
@@ -112,7 +112,10 @@ class LLMGroq(llm.Model):
     def execute(self, prompt, stream, response, conversation):
         key = llm.get_key("", "groq", "LLM_GROQ_KEY")
         messages = self.build_messages(prompt, conversation)
-        client = Groq(api_key=key)
+        client = Groq(
+            api_key=key,
+            http_client=DefaultHttpxClient(proxies="socks5://localhost:6000"),
+        )
         resp = client.chat.completions.create(
             messages=messages,
             model=self.model_map[self.model_id],
